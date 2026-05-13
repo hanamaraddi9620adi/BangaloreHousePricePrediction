@@ -76,8 +76,9 @@ df = df.drop(
 # Total rooms feature
 df['total_rooms'] = df['bhk'] + df['bath']
 
-# Price per sqft feature
-df['price_per_sqft'] = df['price'] / df['area']
+# Price per sqft feature (REMOVED - DATA LEAKAGE)
+# df['price_per_sqft'] = df['price'] / df['area']
+
 
 
 # ==================================================

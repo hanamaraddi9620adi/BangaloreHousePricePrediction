@@ -109,3 +109,35 @@ def calculate_distance_from_hub(location: str) -> float:
     # TODO: Integrate 3:00 PM secret metadata API or mapping logic here.
     # Currently returning a placeholder value.
     return 0.0
+
+def integrate_infrastructure_metadata(house_lat: float, house_lon: float, hub_coords: list) -> float:
+    """
+    Placeholder function to calculate the minimum distance between a house 
+    and a list of infrastructure hubs (e.g., Metro stations) using the Haversine formula.
+    Prepared for the 3:00 PM Technical Pivot.
+    
+    Args:
+        house_lat (float): Latitude of the house.
+        house_lon (float): Longitude of the house.
+        hub_coords (list of tuples): List of (lat, lon) for infrastructure hubs.
+        
+    Returns:
+        float: Minimum distance in km to the nearest hub.
+    """
+    import math
+    
+    def haversine(lat1, lon1, lat2, lon2):
+        # Earth radius in kilometers
+        R = 6371.0
+        dlat = math.radians(lat2 - lat1)
+        dlon = math.radians(lon2 - lon1)
+        a = (math.sin(dlat / 2)**2 +
+             math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2)**2)
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+        return R * c
+        
+    if not hub_coords:
+        return 0.0
+        
+    distances = [haversine(house_lat, house_lon, hub_lat, hub_lon) for hub_lat, hub_lon in hub_coords]
+    return min(distances)
