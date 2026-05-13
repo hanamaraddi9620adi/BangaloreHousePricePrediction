@@ -1,6 +1,7 @@
+
 # ============================================
 # HOUSE PRICE PREDICTION PROJECT
-# FINAL OPTIMIZED VERSION
+# FINAL OPTIMIZED VERSION WITH RMSLE
 # ============================================
 
 # ==================================================
@@ -18,6 +19,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import (
     mean_absolute_error,
     mean_squared_error,
+    mean_squared_log_error,
     r2_score
 )
 
@@ -38,6 +40,7 @@ print(df.head())
 
 print("\n================ DATASET SHAPE ================\n")
 print(df.shape)
+
 print("\n================ MISSING VALUES ================\n")
 print(df.isnull().sum())
 
@@ -61,7 +64,7 @@ print(df.shape)
 # ==================================================
 
 # Removing weak features
-# because simpler model = better accuracy
+# Simpler model can improve generalization
 
 df = df.drop(
     ['balcony', 'parking'],
@@ -76,15 +79,16 @@ df = df.drop(
 # Total rooms feature
 df['total_rooms'] = df['bhk'] + df['bath']
 
-# Price per sqft feature
-df['price_per_sqft'] = df['price'] / df['area']
+# NOTE:
+# Removed price_per_sqft because it creates
+# target leakage using price column
 
 
 # ==================================================
 # STEP 7 — OUTLIER REMOVAL
 # ==================================================
 
-# Removing extreme outliers using IQR method
+# Using IQR Method
 
 Q1 = df['price'].quantile(0.25)
 Q3 = df['price'].quantile(0.75)
@@ -217,7 +221,10 @@ model.fit(X_train, y_train)
 # Predictions
 prediction = model.predict(X_test)
 
-# Accuracy
+# RMSLE requires non-negative predictions
+prediction = np.maximum(prediction, 0)
+
+# R2 Score
 r2 = r2_score(y_test, prediction)
 
 print("Model Accuracy (R2 Score):")
@@ -231,7 +238,10 @@ print(r2 * 100)
 # STEP 14 — ERROR METRICS
 # ==================================================
 
+# --------------------------------------------------
 # MAE
+# --------------------------------------------------
+
 mae = mean_absolute_error(
     y_test,
     prediction
@@ -240,7 +250,11 @@ mae = mean_absolute_error(
 print("\nMean Absolute Error (MAE):")
 print(mae)
 
+
+# --------------------------------------------------
 # RMSE
+# --------------------------------------------------
+
 rmse = np.sqrt(
     mean_squared_error(
         y_test,
@@ -250,6 +264,21 @@ rmse = np.sqrt(
 
 print("\nRoot Mean Squared Error (RMSE):")
 print(rmse)
+
+
+# --------------------------------------------------
+# RMSLE
+# --------------------------------------------------
+
+rmsle = np.sqrt(
+    mean_squared_log_error(
+        y_test,
+        prediction
+    )
+)
+
+print("\nRoot Mean Squared Log Error (RMSLE):")
+print(rmsle)
 
 
 # ==================================================
@@ -263,7 +292,8 @@ plt.scatter(
     prediction
 )
 
-# Perfect prediction line
+# Perfect Prediction Line
+
 plt.plot(
     [y_test.min(), y_test.max()],
     [y_test.min(), y_test.max()],
@@ -281,8 +311,6 @@ plt.show()
 # ==================================================
 # STEP 16 — IMPORTANT FEATURES
 # ==================================================
-
-# Getting feature coefficients
 
 feature_importance = pd.DataFrame({
     'Feature': X.columns,
@@ -328,38 +356,6 @@ joblib.dump(
 print("\nModel saved successfully as house_price_model.pkl")
 
 
-
-# RMSE
-rmse = np.sqrt(
-    mean_squared_error(
-        y_test,
-        prediction
-    )
-)
-
-print("\nRoot Mean Squared Error (RMSE):")
-print(rmse)
-
-
-# ==================================================
-# RMSLE CALCULATION
-# ==================================================
-
-from sklearn.metrics import mean_squared_log_error
-
-prediction_safe = np.maximum(prediction, 0)
-
-rmsle = np.sqrt(
-    mean_squared_log_error(
-        y_test,
-        prediction_safe
-    )
-)
-
-print("\nRoot Mean Squared Log Error (RMSLE):")
-print(rmsle)
-
-
 # ==================================================
 # STEP 19 — PROJECT COMPLETED
 # ==================================================
@@ -375,12 +371,17 @@ print("===================================================\n")
 
 # COMPLETED:
 # 1. Data Cleaning
-# 2. Outlier Removal
-# 3. Feature Engineering
-# 4. Data Visualization
-# 5. Correlation Analysis
-# 6. Encoding
-# 7. Linear Regression Model
-# 8. Feature Importance
-# 9. Model Evaluation
-# 10. Saved ML Model
+# 2. Duplicate Removal
+# 3. Outlier Removal
+# 4. Feature Engineering
+# 5. Data Visualization
+# 6. Correlation Analysis
+# 7. Location Analysis
+# 8. Encoding
+# 9. Linear Regression Model
+# 10. MAE Evaluation
+# 11. RMSE Evaluation
+# 12. RMSLE Evaluation
+# 13. Feature Importance
+# 14. Saved ML Model
+
