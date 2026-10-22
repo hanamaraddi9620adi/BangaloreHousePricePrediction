@@ -1,4 +1,4 @@
-# 🏙️ DataVerse: Bengaluru House Price Prediction Engine
+# 🏙️ Bangalore House Price Prediction
 
 ![Python](https://img.shields.io/badge/Python-3.13-blue.svg)
 ![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-1.3-orange.svg)
@@ -8,7 +8,7 @@
 > **Official Submission for DataVerse Datathon 2025**  
 > **Track 2:** Bengaluru House Prices  
 
-This repository contains our end-to-end Machine Learning pipeline designed to predict luxury and standard property prices in Bengaluru. We heavily prioritized engineering discipline, feature extraction, and mathematically robust model stacking to minimize **RMSLE (Root Mean Squared Logarithmic Error)**.
+This repository contains an end-to-end machine-learning dashboard for predicting Bengaluru property prices. It combines engineered property features, metro proximity analysis, and a stacked regression model in an interactive Streamlit application.
 
 ---
 
@@ -45,25 +45,33 @@ Our pipeline automatically generates high-resolution audit artifacts to ensure t
 
 ---
 
-## 🚀 How to Run the Pipeline Locally
+## 🚀 Run the dashboard locally
 
 **1. Clone the Repository:**
 ```bash
-git clone https://github.com/lochangowda10/DataVerse.git
-cd DataVerse
+git clone https://github.com/hanamaraddi9620adi/BangaloreHousePricePrediction.git
+cd BangaloreHousePricePrediction
 ```
 
 **2. Install Dependencies:**
 ```bash
-pip install pandas numpy matplotlib seaborn scikit-learn xgboost
+pip install -r requirements.txt
 ```
 
-**3. Execute the Full Pipeline (with Pivot Integration):**
+**3. Start Streamlit:**
 ```bash
-cd src
-python model_training.py
+streamlit run app.py
 ```
-*This script will automatically load the dataset, apply the Haversine pivot mapping, train the Stacking Ensemble, and output the final R² and RMSLE metrics.*
+
+The dashboard loads the committed `stacked_model.pkl` and `house_prices_bangalore.csv` files. The model-training scripts in `src/` can be run separately when retraining is required.
+
+## ☁️ Deploy on Streamlit Community Cloud
+
+1. Open [share.streamlit.io](https://share.streamlit.io/) and sign in with GitHub.
+2. Select the `hanamaraddi9620adi/BangaloreHousePricePrediction` repository and its `main` branch.
+3. Set the main file path to `app.py`, then click **Deploy**.
+
+The repository includes `requirements.txt`, `runtime.txt`, and `.streamlit/config.toml` so the hosted environment uses the same dependency and theme configuration.
 
 ---
 
