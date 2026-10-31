@@ -6,7 +6,8 @@ import joblib
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-import os, traceback, time, logging
+import traceback, time, logging
+from pathlib import Path
 
 # Suppress annoying terminal warnings locally
 logging.getLogger("streamlit.runtime.scriptrunner_utils.script_run_context").setLevel(logging.ERROR)
@@ -80,21 +81,27 @@ def find_nearest_metro(lat, lon):
     return best_n, best_d
 
 # ── LOAD MODEL ──
+APP_DIR = Path(__file__).resolve().parent
+
 @st.cache_resource
 def load_model():
-    for p in ['stacked_model.pkl','../stacked_model.pkl']:
-        if os.path.exists(p):
-            try: return joblib.load(p)
-            except: pass
-    return None
+    model_path = APP_DIR / "stacked_model.pkl"
+    if not model_path.is_file():
+        return None, f"Model file not found: {model_path.name}"
+    try:
+        return joblib.load(model_path), None
+    except Exception as exc:
+        logging.exception("Could not load model from %s", model_path)
+        return None, f"Could not load {model_path.name}: {exc}"
 
 @st.cache_data
 def load_data():
-    for p in ['house_prices_bangalore.csv','../house_prices_bangalore.csv']:
-        if os.path.exists(p): return pd.read_csv(p)
-    return None
+    data_path = APP_DIR / "house_prices_bangalore.csv"
+    if not data_path.is_file():
+        return None
+    return pd.read_csv(data_path)
 
-model = load_model()
+model, model_error = load_model()
 df = load_data()
 
 # ── SIDEBAR ──
@@ -104,8 +111,9 @@ with st.sidebar:
     st.markdown("---")
     page = st.radio("Navigation", ["🏠 Executive Overview", "🤖 AI Price Predictor", "🚇 Metro Proximity Pivot", "📊 Deep Analytics", "🧠 AI Insights"], label_visibility="collapsed")
     st.markdown("---")
-    if model: st.success("Model: Online ✓")
+    if model is not None: st.success("Model: Online ✓")
     else: st.error("Model: Offline ✗")
+    if model_error: st.caption(model_error)
     if df is not None: st.info(f"Dataset: {len(df)} records")
     st.markdown("---")
     st.markdown('<p style="color:#8B8FA3;font-size:0.7rem;">Built by Prime Team<br>DataVerse Datathon 2025</p>', unsafe_allow_html=True)
