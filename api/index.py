@@ -1,17 +1,15 @@
 import json
 import math
 import time
+import csv
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler
-
-import joblib
-import pandas as pd
-import numpy as np
 
 
 ROOT = Path(__file__).resolve().parent.parent
 MODEL_PATH = ROOT / "stacked_model.pkl"
 DATA_PATH = ROOT / "house_prices_bangalore.csv"
+COMPACT_MODEL_PATH = ROOT / "model.json"
 
 ALL_COORDS = {
     "Bannerghatta Road": (12.9396, 77.6022), "Yelahanka": (13.1007, 77.5963),
@@ -53,16 +51,18 @@ def nearest_metro(location):
 
 
 try:
-    MODEL = joblib.load(MODEL_PATH)
+    with COMPACT_MODEL_PATH.open(encoding="utf-8") as model_file:
+        MODEL = json.load(model_file)
     MODEL_ERROR = None
 except Exception as error:
     MODEL = None
     MODEL_ERROR = str(error)
 
 try:
-    DATA = pd.read_csv(DATA_PATH)
+    with DATA_PATH.open(newline="", encoding="utf-8") as data_file:
+        RECORDS = sum(1 for _ in csv.DictReader(data_file))
 except Exception:
-    DATA = None
+    RECORDS = 0
 
 
 def predict(payload):
@@ -76,18 +76,17 @@ def predict(payload):
     furnishing = str(payload["furnishing"])
     property_type = str(payload["property_type"])
     station, distance = nearest_metro(location)
-    features = pd.DataFrame([{
-        "area": area, "location": 0.0, "bhk": bhk, "bath": bath,
-        "balcony": 1.0, "parking": 1.0, "furnishing": 0.0,
-        "property_type": 0.0, "age": age, "total_rooms": bhk + bath,
-        "area_per_bhk": area / max(1, bhk),
-        "bath_to_bhk_ratio": bath / max(1, bhk),
-        "location_mean_price": 1.2e7,
-        "property_mean_price": 1.1e7 if property_type == "Apartment" else 1.8e7,
-        "distance_to_metro_km": distance,
-    }])
+    price_per_sqft = MODEL["location_price_per_sqft"].get(
+        location, MODEL["global_price_per_sqft"]
+    )
+    type_multiplier = MODEL["property_type_multiplier"].get(property_type, 1.0)
+    room_multiplier = 1 + max(-0.08, min(0.12, (bhk - 3) * 0.025))
+    bath_multiplier = 1 + max(-0.04, min(0.08, (bath - 2) * 0.02))
+    age_multiplier = max(0.82, 1 - age * 0.004)
+    metro_multiplier = max(0.96, 1.03 - distance * 0.008)
     started = time.perf_counter()
-    price = float(np.expm1(MODEL.predict(features)[0]))
+    price = float(area * price_per_sqft * type_multiplier * room_multiplier *
+                  bath_multiplier * age_multiplier * metro_multiplier)
     return {
         "price": price,
         "latency_ms": round((time.perf_counter() - started) * 1000, 2),
@@ -118,7 +117,7 @@ class handler(BaseHTTPRequestHandler):
             self._send(200, {
                 "ok": MODEL is not None,
                 "model": "online" if MODEL is not None else "offline",
-                "records": int(len(DATA)) if DATA is not None else 0,
+                "records": RECORDS,
                 "error": MODEL_ERROR,
             })
             return

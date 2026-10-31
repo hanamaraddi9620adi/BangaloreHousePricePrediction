@@ -73,6 +73,21 @@ The dashboard loads the committed `stacked_model.pkl` and `house_prices_bangalor
 
 The repository includes `requirements.txt`, `runtime.txt`, and `.streamlit/config.toml` so the hosted environment uses the same dependency and theme configuration.
 
+## ⚡ Deploy on Vercel
+
+The Vercel deployment uses the lightweight web dashboard in `index.html` and the
+dependency-free Python API in `api/index.py`. It avoids the large scientific
+Python bundle required by Streamlit and loads quickly on Vercel serverless
+functions.
+
+1. Import this repository at [vercel.com/new](https://vercel.com/new).
+2. Keep the framework preset as **Other**.
+3. Use the root directory and click **Deploy**.
+
+The API is available at `/api/health` and `/api/predict`. The original
+Streamlit dashboard can still be run locally with the dependencies in
+`requirements-streamlit.txt`.
+
 ---
 
 ## 🏆 Final Model Metrics
